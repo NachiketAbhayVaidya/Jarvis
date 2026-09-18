@@ -1,0 +1,12 @@
+openai
+python-dotenv
+SpeechRecognition
+PyAudio
+openwakeword
+sounddevice
+numpy
+edge-tts
+pygame
+pystray
+Pillow
+psutil
