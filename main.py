@@ -12,11 +12,15 @@ if sys.stderr is None:
 
 import threading
 import time
+import os
 
-from jarvis import config
+from jarvis import config, control
 from jarvis.audio import stt, tts, wakeword
 from jarvis.brain import llm
+from jarvis import biometrics
 from jarvis.control import cancel_event, shutdown_event
+from jarvis.remote import server as remote_server
+from jarvis.remote.pairing import build_pairing_info
 from jarvis.ui.overlay import FloatingOverlay
 from jarvis.ui.setup_wizard import run_setup_wizard
 from jarvis.ui.tray import TrayIcon
@@ -26,11 +30,17 @@ def build_app():
     def shutdown():
         shutdown_event.set()
         cancel_event.set()
+        remote_server.stop_server()
         tray.stop()
         overlay.close()
 
     overlay = FloatingOverlay(on_stop=cancel_event.set, on_quit=shutdown)
-    tray = TrayIcon(on_show_log=overlay.show, on_quit=shutdown)
+    tray = TrayIcon(
+        on_show_log=overlay.show,
+        on_show_remote=lambda: overlay.show_remote_info(**build_pairing_info()),
+        on_quit=shutdown,
+    )
+    control.register_shutdown_handler(shutdown)
 
     return overlay, tray
 
@@ -68,8 +78,29 @@ def assistant_loop(overlay, tray):
         overlay.set_status("listening")
         tray.set_status("listening")
 
-        command = stt.listen_for_command()
+        command, audio_path = stt.listen_for_command_with_audio()
         if not command:
+            if audio_path:
+                try:
+                    os.remove(audio_path)
+                except FileNotFoundError:
+                    pass
+            continue
+
+        try:
+            verification = biometrics.verify_audio(audio_path) if audio_path else None
+        finally:
+            if audio_path:
+                try:
+                    os.remove(audio_path)
+                except FileNotFoundError:
+                    pass
+        if verification and not verification.verified:
+            overlay.log(f"Voice access denied: {verification.message}")
+            overlay.set_status("speaking")
+            tray.set_status("speaking")
+            tts.speak("Sorry, I could not verify your voice.", cancel_event=cancel_event)
+            cancel_event.clear()
             continue
 
         overlay.log(f"You: {command}")
@@ -96,8 +127,11 @@ def main():
     if not config.is_configured():
         return  # user closed the setup wizard without saving a key
 
+    config.get_or_create_remote_token()
+
     overlay, tray = build_app()
     tray.run_detached()
+    remote_server.run_server_in_thread()
 
     audio_thread = threading.Thread(
         target=assistant_loop, args=(overlay, tray), daemon=True

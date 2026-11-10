@@ -16,7 +16,7 @@ def _make_icon(color: str) -> Image.Image:
 
 
 class TrayIcon:
-    def __init__(self, on_show_log, on_quit):
+    def __init__(self, on_show_log, on_show_remote, on_quit):
         self._on_quit = on_quit
         self.icon = pystray.Icon(
             "jarvis",
@@ -24,6 +24,7 @@ class TrayIcon:
             "Jarvis: idle",
             menu=pystray.Menu(
                 pystray.MenuItem("Show Log", lambda: on_show_log()),
+                pystray.MenuItem("Remote Access...", lambda: on_show_remote()),
                 pystray.MenuItem("Quit", lambda: self._on_quit()),
             ),
         )

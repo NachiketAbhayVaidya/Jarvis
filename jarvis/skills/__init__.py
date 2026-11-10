@@ -31,6 +31,11 @@ def get_tool_schemas():
     return [entry["schema"] for entry in _REGISTRY.values()]
 
 
+def get_tool(name):
+    """Returns the registry entry ({"fn", "schema"}) for a tool, or None."""
+    return _REGISTRY.get(name)
+
+
 def call_tool(name, args):
     if name not in _REGISTRY:
         return f"Unknown tool: {name}"
@@ -38,4 +43,4 @@ def call_tool(name, args):
 
 
 # Import skill modules so their @tool decorators run and populate the registry.
-from . import web, music, system, apps  # noqa: E402,F401
+from . import web, music, system, apps, confirm, files  # noqa: E402,F401

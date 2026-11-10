@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Jarvis</title>
+<link rel="manifest" href="manifest.json" />
+<meta name="theme-color" content="#14172c" />
+<link rel="apple-touch-icon" href="icons/icon-192.png" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<div id="pairing-screen">
+  <h1>Jarvis</h1>
+  <p>Enter the pairing token shown in Jarvis's tray "Remote Access..." menu on your laptop.</p>
+  <input id="token-input" type="text" placeholder="Pairing token" autocomplete="off" autocapitalize="off" />
+  <button id="pair-btn">Connect</button>
+  <div id="pairing-error"></div>
+</div>
+
+<div id="app" class="hidden">
+  <header>
+    <h1>Jarvis</h1>
+    <span id="status-pill">idle</span>
+  </header>
+
+  <nav>
+    <button id="tab-chat" class="active">Chat</button>
+    <button id="tab-skills">Skills</button>
+  </nav>
+
+  <main>
+    <div id="view-chat" class="view active">
+      <div id="transcript"></div>
+      <div id="composer">
+        <input id="command-input" type="text" placeholder="Tell Jarvis something..." autocomplete="off" />
+        <button id="send-btn">Send</button>
+      </div>
+      <div id="control-row">
+        <button id="stop-btn">Stop</button>
+        <button id="quit-btn">Quit Jarvis</button>
+      </div>
+    </div>
+
+    <div id="view-skills" class="view">
+      <div id="skills-list"></div>
+    </div>
+  </main>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

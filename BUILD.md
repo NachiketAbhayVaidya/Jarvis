@@ -57,3 +57,21 @@ memory on first use — this is normal and only noticeable once per launch.
 
 Just re-run the `pyinstaller Jarvis.spec --noconfirm --clean` command above —
 it picks up any changes to the Python source automatically.
+
+## Remote Access (control Jarvis from your phone)
+
+Jarvis runs a small local web server so you can send it commands, watch its
+status/transcript live, and trigger skills directly from your phone.
+
+1. Install [Tailscale](https://tailscale.com/download) on this PC and on your
+   phone, and sign in to the same account on both (free for personal use).
+2. Launch Jarvis normally. On first run it silently generates a pairing token
+   into `%APPDATA%\Jarvis\.env` — nothing to configure.
+3. Right-click the Jarvis tray icon → **Remote Access...** to see a QR code,
+   your Tailscale IP/port, and the pairing token.
+4. Scan the QR code with your phone (on the same tailnet) — it opens the
+   Jarvis web app and pairs automatically. Use your browser's "Add to Home
+   Screen" option to install it like an app.
+
+If Tailscale isn't detected, the same window falls back to your local network
+address instead — that only works while your phone is on the same Wi-Fi.

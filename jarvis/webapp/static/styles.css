@@ -1,0 +1,215 @@
+:root {
+  color-scheme: dark;
+  --bg: #0b0d1a;
+  --panel: #14172c;
+  --panel-2: #1b1f3c;
+  --text: #f2f3ff;
+  --muted: #9aa0c8;
+  --accent: #4f8cff;
+  --accent-2: #ff5cf0;
+  --danger: #ff5c6a;
+  --radius: 14px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  gap: 10px;
+}
+
+header h1 {
+  font-size: 18px;
+  margin: 0;
+}
+
+#status-pill {
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--panel-2);
+  color: var(--muted);
+}
+#status-pill.listening { color: #38d9c4; }
+#status-pill.speaking { color: var(--accent); }
+
+nav {
+  display: flex;
+  gap: 8px;
+  padding: 0 16px 10px;
+}
+nav button {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 10px;
+  background: var(--panel);
+  color: var(--muted);
+  font-size: 14px;
+}
+nav button.active {
+  background: var(--accent);
+  color: white;
+}
+
+main {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: 0 16px;
+}
+
+.view { display: none; flex: 1; min-height: 0; flex-direction: column; }
+.view.active { display: flex; }
+
+#transcript {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: 12px;
+}
+.line {
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  background: var(--panel);
+  font-size: 14px;
+  line-height: 1.4;
+  word-wrap: break-word;
+}
+.line.you { background: var(--panel-2); align-self: flex-end; max-width: 85%; }
+.line.jarvis { align-self: flex-start; max-width: 85%; }
+.line.system { color: var(--muted); font-size: 12px; text-align: center; background: none; }
+
+#composer {
+  display: flex;
+  gap: 8px;
+  padding: 10px 0 16px;
+}
+#composer input {
+  flex: 1;
+  padding: 12px 14px;
+  border-radius: 999px;
+  border: none;
+  background: var(--panel);
+  color: var(--text);
+  font-size: 15px;
+}
+#composer button {
+  padding: 0 18px;
+  border: none;
+  border-radius: 999px;
+  background: var(--accent);
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+#skills-list {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-bottom: 16px;
+}
+.skill-card {
+  background: var(--panel);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+}
+.skill-card h3 { margin: 0 0 4px; font-size: 15px; }
+.skill-card p { margin: 0 0 8px; font-size: 12px; color: var(--muted); }
+.skill-card input {
+  width: 100%;
+  margin-bottom: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: none;
+  background: var(--panel-2);
+  color: var(--text);
+  font-size: 13px;
+}
+.skill-card button {
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  background: var(--accent);
+  color: white;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+#control-row {
+  display: flex;
+  gap: 10px;
+  padding: 10px 0 16px;
+}
+#control-row button {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 14px;
+  color: white;
+}
+#stop-btn { background: #6a4fd8; }
+#quit-btn { background: var(--danger); }
+
+#pairing-screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+  padding: 24px;
+  text-align: center;
+}
+#pairing-screen input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: none;
+  background: var(--panel);
+  color: var(--text);
+  font-size: 14px;
+}
+#pairing-screen button {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  background: var(--accent);
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+}
+#pairing-error { color: var(--danger); font-size: 13px; min-height: 16px; }
+
+.hidden { display: none !important; }

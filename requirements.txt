@@ -6,7 +6,11 @@ openwakeword
 sounddevice
 numpy
 edge-tts
+requests
 pygame
 pystray
 Pillow
 psutil
+fastapi
+uvicorn[standard]
+qrcode

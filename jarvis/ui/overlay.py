@@ -4,6 +4,10 @@ import tkinter as tk
 import tkinter.font as tkfont
 from tkinter.scrolledtext import ScrolledText
 
+from PIL import ImageTk
+
+from ..remote import broadcaster
+
 # -- fixed window footprint; the notch pill animates its HEIGHT inside it.
 # Width never changes - flush against the top edge, it only grows downward. --
 _MAX_W = 460
@@ -118,6 +122,8 @@ class FloatingOverlay:
         self._log_lines = []
         self._log_window = None
         self._log_text = None
+        self._remote_window = None
+        self._remote_qr_photo = None
         self._bar_phase = 0.0
         self._status = "idle"
         self._tap_count = 0
@@ -226,11 +232,16 @@ class FloatingOverlay:
     def show(self):
         self._queue.put(("show_log", None))
 
+    def show_remote_info(self, **pairing_info):
+        self._queue.put(("show_remote_info", pairing_info))
+
     def set_status(self, status: str):
         self._queue.put(("status", status))
+        broadcaster.publish({"type": "status", "status": status})
 
     def log(self, line: str):
         self._queue.put(("log", line))
+        broadcaster.publish({"type": "log", "line": line})
 
     def close(self):
         self._queue.put(("destroy", None))
@@ -404,6 +415,43 @@ class FloatingOverlay:
         self._log_text.pack(fill="both", expand=True, padx=8, pady=8)
         self._refresh_log_text()
 
+    def _ensure_remote_info_window(self, info):
+        if self._remote_window is not None:
+            self._remote_window.destroy()
+
+        self._remote_window = tk.Toplevel(self.root)
+        self._remote_window.title("Jarvis - Remote Access")
+        self._remote_window.resizable(False, False)
+        pad = {"padx": 12, "pady": 6}
+
+        if info.get("warning"):
+            tk.Label(
+                self._remote_window, text=info["warning"], fg="#a00", wraplength=320,
+                justify="left",
+            ).pack(**pad)
+
+        tk.Label(
+            self._remote_window,
+            text=f"Scan this QR code on your phone, or open:",
+            justify="left",
+        ).pack(**pad)
+
+        self._remote_qr_photo = ImageTk.PhotoImage(info["qr_image"].get_image())
+        tk.Label(self._remote_window, image=self._remote_qr_photo).pack(padx=12, pady=6)
+
+        url_entry = tk.Entry(self._remote_window, width=48)
+        url_entry.insert(0, info["url"])
+        url_entry.config(state="readonly")
+        url_entry.pack(**pad)
+
+        def copy_url():
+            self.root.clipboard_clear()
+            self.root.clipboard_append(info["url"])
+
+        tk.Button(self._remote_window, text="Copy Link", command=copy_url).pack(pady=(0, 12))
+
+        self._remote_window.protocol("WM_DELETE_WINDOW", self._remote_window.destroy)
+
     def _refresh_log_text(self):
         if self._log_text is None:
             return
@@ -438,6 +486,10 @@ class FloatingOverlay:
                     self._ensure_log_window()
                     self._log_window.deiconify()
                     self._log_window.lift()
+                elif kind == "show_remote_info":
+                    self._ensure_remote_info_window(payload)
+                    self._remote_window.deiconify()
+                    self._remote_window.lift()
                 elif kind == "destroy":
                     self.root.destroy()
                     return
