@@ -1,24 +1,21 @@
-# Jarvis — A Voice-First Desktop Assistant, Powered by Gnani AI
+# Jarvis — My Voice-First Desktop Assistant
 
-**Jarvis brings natural, multilingual voice interaction to the Windows desktop—with Gnani AI at the heart of the conversation.**
+I built Jarvis to make everyday computer tasks feel more natural. Instead of switching between menus and typing commands, I can say **“Hey Jarvis,”** speak what I need, and hear a spoken response.
 
-Say “Hey Jarvis” to wake the assistant, then speak a request in Hindi or another supported Indian language. Gnani **Prisma** turns the command into text; Jarvis understands the request, responds, or carries out an available action; and Gnani **Timbre** speaks the reply aloud. The result is a hands-free experience designed to feel conversational and useful—not just like a speech-to-text demo.
+Gnani AI powers the heart of this experience. **Prisma** turns my spoken Hindi and other supported Indian-language requests into text. Jarvis then interprets the request, responds, or uses one of its available skills to perform a desktop task. **Timbre** speaks the response aloud, completing a voice-first interaction from start to finish.
 
-## What makes Jarvis useful
+## What Jarvis can do
 
-- **A natural voice loop:** From spoken command to spoken response, Prisma and Timbre connect the experience end to end.
-- **Made for Indian languages:** Configure the recognition language and Timbre voice to suit the user, including Hindi and other supported languages.
-- **Private by design at the wake stage:** “Hey Jarvis” detection runs locally, so the assistant does not need to continuously send audio to the cloud just to listen for its wake word.
-- **More than conversation:** Jarvis can use its registered skills to handle supported desktop tasks, while its floating interface displays status and captions.
-- **An optional identity check:** With user consent and the required credentials, Gnani Inya Shield / armour365 can verify a speaker before a command is processed. Raw enrollment audio is temporary; the app removes its local recording after sending it for enrollment.
+- **Listen when called:** Local wake-word detection waits for “Hey Jarvis” without continuously sending microphone audio to a cloud service.
+- **Understand speech:** Gnani Prisma transcribes the user’s request, with the recognition language configurable for supported Indian languages.
+- **Take useful action:** Jarvis can handle supported requests such as opening applications or websites, searching the web, and working with files.
+- **Speak naturally:** Gnani Timbre turns responses into audio, while Jarvis’s floating desktop interface shows status and captions.
 
-## Why Gnani AI
+## Why I built it with Gnani AI
 
-Jarvis demonstrates how Gnani’s speech technologies can power a practical voice interface: **Prisma understands the user, Timbre gives the assistant a voice, and—when enabled—Inya Shield adds a speaker-verification step.** Gnani is not an add-on to a generic demo; its speech capabilities form the core of the user interaction.
+I wanted to build more than a voice-recognition demo. Jarvis shows how Gnani Prisma and Timbre can work together in a practical assistant: one helps Jarvis understand what I say, and the other lets it answer in a voice. Keeping wake-word detection local also means the microphone is not streaming audio to the cloud just to wait for the user to begin.
 
-## The vision
-
-Jarvis aims to make desktop computing more accessible and natural for people who would rather speak than navigate menus or type. The current Windows prototype is a foundation for a more capable multilingual assistant—one that can understand everyday speech, take useful actions, and respond in a clear, familiar voice.
+My vision is to make computers easier and more accessible to use through everyday speech, especially in the languages people are most comfortable speaking. Jarvis is my working Windows prototype and a foundation I can continue improving with better recognition, more useful skills, and a smoother conversational experience.
 
 **Built for the Great Indian AI Internship Challenge.**  
 `#GnaniAI` `#GreatIndianAIInternshipChallenge`

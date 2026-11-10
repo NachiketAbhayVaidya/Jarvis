@@ -33,12 +33,14 @@ _SYSTEM_PROMPT = {
         "list_directory, search_files, read_file, open_path (open a file or folder), "
         "create_folder, write_file and edit_file (to change files), and "
         "close_application. To edit a file, read_file it first, then edit_file with "
-        "exact text. write_file, edit_file and close_application don't act "
+        "exact text. To create a file, call write_file directly; it creates missing "
+        "parent folders, so don't call create_folder first. Ask for only one "
+        "confirmation per action. write_file, edit_file and close_application don't act "
         "immediately: they return CONFIRMATION NEEDED. Then briefly tell the user what "
-        "will happen and ask yes or no, and STOP. Only call confirm_action after the "
-        "user says yes in their next message; call cancel_action if they say no. Never "
-        "claim a change was made until confirm_action reports it. Keep file listings "
-        "and search results short when spoken. Otherwise, just answer directly."
+        "will happen, ask one yes-or-no question, and STOP. Only call confirm_action "
+        "after the user says yes in their next message; call cancel_action if they say "
+        "no. Never claim a change was made until confirmation reports it. Keep file "
+        "listings and search results short when spoken. Otherwise, just answer directly."
     ),
 }
 
@@ -69,6 +71,11 @@ def process(command: str, session_id: str = "local") -> str:
         confirm.begin_turn(session_id)
         history = session["history"]
         history.append({"role": "user", "content": command})
+
+        if confirm.has_pending(session_id):
+            reply = confirm.resolve_response(command, session_id)
+            history.append({"role": "assistant", "content": reply})
+            return reply
 
         client = _get_client()
         for _ in range(_MAX_TOOL_ROUNDS):

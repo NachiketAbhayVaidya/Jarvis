@@ -6,7 +6,9 @@ model can't approve its own action within the same request.
 """
 
 import contextvars
+import re
 import threading
+import unicodedata
 
 from . import tool
 
@@ -26,12 +28,74 @@ def begin_turn(session_id: str):
 def request(description: str, action) -> str:
     sid = _session.get()
     with _lock:
+        pending = _pending.get(sid)
+        if pending and pending["turn"] == _turns.get(sid, 0):
+            return (
+                f"CONFIRMATION ALREADY NEEDED to {pending['desc']}. Do not request "
+                "another confirmation or action. Ask the user to confirm this action."
+            )
         _pending[sid] = {"turn": _turns.get(sid, 0), "desc": description, "action": action}
     return (
         f"CONFIRMATION NEEDED to {description}. Nothing has been done yet. Tell the "
-        "user exactly what will happen and ask them to say yes or no. Only call "
-        "confirm_action after they answer yes in their next message."
+        "user exactly what will happen and ask them one yes-or-no question. Stop "
+        "after asking; do not ask for confirmation again."
     )
+
+
+def has_pending(session_id: str) -> bool:
+    with _lock:
+        return session_id in _pending
+
+
+def cancel_pending(session_id: str) -> bool:
+    with _lock:
+        return _pending.pop(session_id, None) is not None
+
+
+def resolve_response(response: str, session_id: str) -> str | None:
+    """Resolve a clear spoken yes/no; cancel safely if it is unclear."""
+    normalized = " ".join(
+        "".join(
+            character
+            if unicodedata.category(character)[0] in {"L", "M", "N"}
+            else " "
+            for character in response.casefold()
+        ).split()
+    )
+    negative_tokens = {
+        "no", "nope", "not", "never", "dont", "don't", "didnt", "didn't",
+        "cannot", "cant", "can't", "wouldnt", "wouldn't", "cancel", "stop",
+        "nahi", "nahin",
+        "नहीं", "नही", "मत", "रद्द",
+    }
+    tokens = normalized.split()
+    is_negative = any(token in negative_tokens for token in tokens) or bool(
+        re.search(r"\b(?:didn['’]?t|don['’]?t|can['’]?t|cannot|wouldn['’]?t)\b", response.casefold())
+    )
+    affirmative_tokens = {
+        "yeah", "yep", "yup", "sure", "absolutely", "definitely",
+        "okay", "ok", "proceed", "confirm", "haan", "han", "हाँ", "हां", "जी",
+    }
+    has_yes = any(re.fullmatch(r"ye+s+", token) for token in tokens)
+    is_affirmative = (
+        (has_yes or any(token in affirmative_tokens for token in tokens)
+         or "go ahead" in normalized or "do it" in normalized)
+        and not is_negative
+    )
+
+    with _lock:
+        pending = _pending.pop(session_id, None)
+    if pending is None:
+        return None
+    if is_negative:
+        return "Okay, cancelled."
+    if not is_affirmative:
+        heard = response.strip()
+        return (
+            f"I heard '{heard}', but couldn't identify a clear yes or no, "
+            "so I cancelled it. No change was made."
+        )
+    return pending["action"]()
 
 
 @tool(

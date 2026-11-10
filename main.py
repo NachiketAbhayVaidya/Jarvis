@@ -14,11 +14,14 @@ import threading
 import time
 import os
 
+from openai import APIConnectionError, APIStatusError, BadRequestError, RateLimitError
+
 from jarvis import config, control
 from jarvis.audio import stt, tts, wakeword
 from jarvis.brain import llm
 from jarvis import biometrics
 from jarvis.control import cancel_event, shutdown_event
+from jarvis.skills import confirm
 from jarvis.remote import server as remote_server
 from jarvis.remote.pairing import build_pairing_info
 from jarvis.ui.overlay import FloatingOverlay
@@ -45,13 +48,32 @@ def build_app():
     return overlay, tray
 
 
-def think(command: str):
+def think(command: str, overlay=None):
     """Runs the LLM in a daemon worker thread so a cancel gesture can abandon
     it immediately, without waiting for the in-flight network call."""
     result = {}
 
     def worker():
-        result["reply"] = llm.process(command)
+        try:
+            result["reply"] = llm.process(command)
+        except RateLimitError as exc:
+            result["reply"] = (
+                "Groq's token limit has been reached. Wait for it to reset, "
+                "or reduce usage or upgrade your plan."
+            )
+            result["error"] = str(exc)
+        except BadRequestError as exc:
+            result["reply"] = (
+                "Groq rejected the request format. Check that the selected model "
+                "supports tool calling."
+            )
+            result["error"] = str(exc)
+        except APIConnectionError as exc:
+            result["reply"] = "Jarvis could not connect to Groq. Check your internet connection and try again."
+            result["error"] = str(exc)
+        except APIStatusError as exc:
+            result["reply"] = f"Groq returned an API error (HTTP {exc.status_code}). Try again later."
+            result["error"] = str(exc)
 
     t = threading.Thread(target=worker, daemon=True)
     t.start()
@@ -59,6 +81,8 @@ def think(command: str):
         if cancel_event.is_set():
             return None
         time.sleep(0.05)
+    if "error" in result and overlay is not None:
+        overlay.log(f"Groq API error: {result['error']}")
     return result.get("reply")
 
 
@@ -105,7 +129,7 @@ def assistant_loop(overlay, tray):
 
         overlay.log(f"You: {command}")
 
-        reply = think(command)
+        reply = think(command, overlay)
         if shutdown_event.is_set():
             break
         if cancel_event.is_set():
@@ -117,6 +141,36 @@ def assistant_loop(overlay, tray):
         tray.set_status("speaking")
         tts.speak(reply, cancel_event=cancel_event)
         cancel_event.clear()
+
+        if confirm.has_pending("local") and not shutdown_event.is_set():
+            overlay.set_status("listening")
+            tray.set_status("listening")
+            answer, audio_path = stt.listen_for_command_with_audio(timeout=10)
+            try:
+                verification = biometrics.verify_audio(audio_path) if audio_path else None
+            finally:
+                if audio_path:
+                    try:
+                        os.remove(audio_path)
+                    except FileNotFoundError:
+                        pass
+
+            if answer and (verification is None or verification.verified):
+                overlay.log(f"You: {answer}")
+                reply = think(answer, overlay)
+                if reply and not shutdown_event.is_set() and not cancel_event.is_set():
+                    overlay.log(f"Jarvis: {reply}")
+                    overlay.set_status("speaking")
+                    tray.set_status("speaking")
+                    tts.speak(reply, cancel_event=cancel_event)
+                    cancel_event.clear()
+            else:
+                confirm.cancel_pending("local")
+                if verification and not verification.verified:
+                    overlay.log(f"Confirmation cancelled: {verification.message}")
+                elif not answer:
+                    overlay.log("Confirmation timed out; action cancelled.")
+            cancel_event.clear()
 
     overlay.close()
 

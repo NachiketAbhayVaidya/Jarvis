@@ -8,8 +8,8 @@ from .. import config
 
 _recognizer = sr.Recognizer()
 _recognizer.energy_threshold = 300
-_recognizer.pause_threshold = 0.6
-_recognizer.dynamic_energy_threshold = False
+_recognizer.pause_threshold = 1.5
+_recognizer.dynamic_energy_threshold = True
 
 
 def listen_for_command_with_audio(timeout=5):
@@ -21,6 +21,7 @@ def listen_for_command_with_audio(timeout=5):
     """
     with sr.Microphone() as source:
         try:
+            _recognizer.adjust_for_ambient_noise(source, duration=0.5)
             audio = _recognizer.listen(source, timeout=timeout, phrase_time_limit=10)
         except sr.WaitTimeoutError:
             return None, None
@@ -56,7 +57,7 @@ def _transcribe_gnani(audio_path: str):
                 "language_code": config.GNANI_LANGUAGE_CODE,
                 "preferred_language": config.GNANI_PREFERRED_LANGUAGE,
                 "format": "transcribe",
-                "itn_native_numerals": "true",
+                "itn_native_numerals": "false",
             },
             files={"audio_file": ("command.wav", audio_file, "audio/wav")},
             timeout=20,
